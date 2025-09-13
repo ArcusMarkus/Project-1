@@ -22,10 +22,21 @@ public class BestFirstQueue<T> implements SearchQueue<T> {
 
     public BestFirstQueue(ToIntFunction<T> heuristic) {
         // TODO: Initialize the three objects listed above.
+        queue = new PriorityQueue<>((d1, d2) -> Integer.compare(d1.getFirst(), d2.getFirst()));
+        lowestEstimateFor = new HashMap<>();
+        this.heuristic = heuristic;
+
     }
 
     @Override
     public void enqueue(SearchNode<T> node) {
+
+        int estimate = heuristic.applyAsInt(node.getValue());
+
+        if (!lowestEstimateFor.containsKey(node.getValue()) || estimate < lowestEstimateFor.get(node.getValue())) {
+            lowestEstimateFor.put(node.getValue(), estimate);
+            queue.add(new Duple<>(estimate, node));
+        }
         // TODO: Calculate the total distance estimate. Then
         //  add the node to the queue if there is no current estimate for the node
         //  or if the new estimate is lower than the lowest seen so far.
@@ -35,6 +46,10 @@ public class BestFirstQueue<T> implements SearchQueue<T> {
     public Optional<SearchNode<T>> dequeue() {
         // TODO: If the queue is empty, return Optional.empty(), otherwise, return
         //  whichever object is next from the priority queue.
-        return Optional.empty(); // TODO: Replace this line; it is here to let the code compile.
+        if (queue.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(queue.poll().getSecond());
+        }
     }
 }

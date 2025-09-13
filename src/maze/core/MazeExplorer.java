@@ -1,15 +1,14 @@
 package maze.core;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
+import core.Direction;
 import core.Pos;
 
 public class MazeExplorer {
 	private Maze m;
 	private Pos location;
+	MazePath path;
 	private TreeSet<Pos> treasureFound;
 	private MazeExplorer goal;
 	
@@ -17,6 +16,7 @@ public class MazeExplorer {
 		this.m = m;
 		this.location = location;
 		treasureFound = new TreeSet<>();
+		path = new MazePath(m.getStart().getX(), m.getStart().getY());
 	}
 	
 	public Pos getLocation() {return location;}
@@ -41,10 +41,33 @@ public class MazeExplorer {
 	}
 
 	public ArrayList<MazeExplorer> getSuccessors() {
-		ArrayList<MazeExplorer> result = new ArrayList<MazeExplorer>();
-		// TODO: It should add as a successor every adjacent, unblocked neighbor square.
-		// I added a comment for demonstration purposes.
-        return result;
+		ArrayList<MazeExplorer> result = new ArrayList<>();
+		ArrayList<Pos> neighbors = m.getNeighbors(location);
+
+		for (Pos neighbor : neighbors){
+			if (location.getManhattanDist(neighbor) > 1)
+				continue;
+			if (m.blocked(location, Direction.between(location, neighbor)))
+				continue;
+			if (path != null && path.hasVisited(neighbor))
+				continue;
+
+			MazePath newPath = new MazePath(path.getStart().getX(), path.getStart().getY());
+			for (int i = 0; i < path.getLength(); i++){
+				newPath.append(path.getNth(i));
+			}
+			newPath.append(neighbor);
+
+			MazeExplorer successor = new MazeExplorer(m, neighbor);
+			successor.path = newPath;
+			successor.treasureFound = new TreeSet<>(this.treasureFound);
+			if (m.isTreasure(neighbor)){
+				successor.treasureFound.add(neighbor);
+			}
+
+			result.add(successor);
+		}
+		return result;
 	}
 	
 	public void addTreasures(Collection<Pos> treasures) {
